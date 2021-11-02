@@ -1,0 +1,33 @@
+version: '3'
+
+volumes:
+    vol_api_db:
+
+services:
+
+    app:
+        env_file:
+            - ./.env
+        build:
+            context: ./app
+            dockerfile: Dockerfile
+        restart: 'no'
+        command: sh -c './manage.py makemigrations && ./manage.py migrate && uvicorn conf.asgi:application --host 0.0.0.0'
+        ports:
+            - 8000:8000
+        depends_on: 
+            - db
+        volumes:
+            - ./app/:/home/app/
+
+    db:
+        image: postgres:latest
+        restart: 'no'
+        ports:
+            - 5432:5432
+        environment: 
+            POSTGRES_DB: ${API_DB_NAME}
+            POSTGRES_USER: ${API_DB_USER}
+            POSTGRES_PASSWORD: ${API_DB_PASSWORD}
+        volumes: 
+            - vol_api_db:/var/lib/postgresql/data
